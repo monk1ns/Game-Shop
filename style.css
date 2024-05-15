@@ -1,90 +1,63 @@
-body {
-   font-family: Arial, sans-serif;
-   margin: 0;
-   padding: 0;
-   background-color: #ffffff;
- }
- 
- header {
-  background-color: #333;
-  color: #fff;
-  padding: 20px;
-  text-align: center;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
-  font-size: 1.5em;
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+.banner{
+    width: 100%;
+    height: 100vh;
+    background-image: url(magicpattern-oPH_5xuMgQw-unsplash.jpg);
+    background-size: cover;
+    background-position: center;
 }
 
- nav ul {
-   list-style-type: none;
-   margin: 0;
-   padding: 0;
-   display: flex;
-   justify-content: center;
- }
- 
- nav li {
-   margin: 0 10px;
- }
- 
- nav a {
-  text-decoration: none;
-  color: #fff;
-  font-size: 1.2em;
+.content{
+
+    width: 100%;
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    text-align: center;
+    color: rgb(0, 0, 0);
+}
+.content h1{
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    font-size: 30px;
+    margin-top: 10px;
 }
 
-nav a:hover {
-  color: #ddd;
+button{
+    width: 200px;
+    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+    padding: 15px 0;
+    text-align: center;
+    margin: 20px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+    border: 2px solid #000000;
+    background: transparent;
+    color: #000000;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
 }
 
- 
- section {
-   display: flex;
-   flex-wrap: wrap;
-   justify-content: space-around;
-   padding: 20px;
- }
- 
- .game-card {
-  width: 300px;
-  margin: 20px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  overflow: hidden;
-  transition: transform 0.3s, box-shadow 0.3s;
-  box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.1);
+span{
+    background: #000000;
+    height: 100%;
+    width: 0;
+    border-radius: 15px;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: -1;
+    transition: 0.5s;
 }
+button:hover span{
+    width: 100%;
 
-.game-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.2);
 }
-
- 
- .game-card h3 {
-   padding: 10px;
-   text-align: center;
- }
- 
- .game-card button {
-   display: block;
-   width: 100%;
-   padding: 10px;
-   background-color: #000000;
-   color: #fff;
-   border: none;
-   cursor: pointer;
- }
- 
- footer {
-  border-top: 1px solid #ddd;
-  padding: 20px;
-  font-size: 1.2em;
+button:hover{
+    border: none;
+    color: #ffffff;
 }
-
- @media (max-width: 768px) {
-  .game-card {
-   width: 100%;
-   margin: 10px 0;
-  }
- }
- 

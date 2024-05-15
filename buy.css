@@ -1,0 +1,105 @@
+.icon-cart{
+  position: relative;
+}
+
+.icon-cart span{
+  background-color: rgb(255, 0, 0);
+  position: absolute;
+  top: 50%;
+  right: -20px;
+  width: 30px;
+  height: 30px;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.title{
+  font-size: xx-large;
+}
+
+.cartTab{
+  background-color: rgb(0, 0, 0);
+  color: white;
+  width: 400px;
+  max-width: 100%;
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-rows: 70px 1fr 70px;
+}
+
+.cartTab h1{
+  padding: 20px;
+  margin: 0;
+  font-weight: 300;
+}
+
+.cartTab .btn{
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+}
+
+.cartTab .btn button{
+  background-color: rgb(255, 255, 255);
+  border: none;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+  font-weight: 500;
+}
+.cartTab.btn button.close{
+  background-color: white;
+}
+.cartTab .listCart{
+  overflow: auto;
+}
+
+.cartTab .listCart::-webkit-scrollbar{
+  width: 0;
+}
+
+.cartTab{
+  right: -400px;
+  transition: 0.5s;
+}
+
+body.activeTabCart .cartTab{
+  right: 0;
+}
+
+body.activeTabCart .container{
+  transform: translateX(-250px);
+}
+
+svg{
+  width: 30px;
+}
+a{
+  text-decoration: none;
+  color: black;
+}
+button{
+  cursor: pointer;
+}
+body{
+  margin: 0;
+  font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+}
+
+
+.container{
+  width: 900px;
+  max-width: 90vw;
+  margin: auto;
+  text-align: center;
+  padding-top: 10px;
+  transition: 0.5s;
+}
+header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+}
