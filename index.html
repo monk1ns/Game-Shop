@@ -6,25 +6,23 @@
     <title>Game Shop</title>
     <link rel="stylesheet" href="nav.css">
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="buy.css">
-</head>
-<body>
-    <div id="app"></div>
-    <div id="temporaryContent">
-        <div class="listProduct">
-            content file index
-        </div>
-    </div>
-
-    <header class="header">
-        <a href="index.html" class="Logo">Logo</a>
-        <nav class="navbar">
-            <a href="index.html">HOME</a>
-            <a href="buy.html">BUY</a>
-            <a href="about.html">ABOUT</a>
-            <a href="login.html">LOGIN</a>
-        </nav>
-    </header>
+   </head>
+   <body>
+     <header class="header">
+         <a href="index.html" class="Logo">Logo</a>
+         <nav class="navbar">
+             <a href="index.html">HOME</a>
+             <a href="product.html">BUY</a>
+             <a href="about.html">ABOUT</a>
+             <a href="login.html" id="auth-link">LOGIN</a>
+         </div>
+             <a href="cart.html" class="icon-cart-link">
+                 <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
+                 </svg>
+             </a>
+         </nav>
+     </header>
 
     <div class="banner">
     </div>
@@ -32,11 +30,52 @@
         <h1>WELCOME TO OUR ONLINE GAME STORE.
         <br>GAMING DREAMS COME TO LIFE!</h1>
         <div>
-            <button onclick="window.location.href= 'buy.html'"><span></span>EXPLORE</button>
+            <button onclick="window.location.href= 'product.html'"><span></span>EXPLORE</button>
             <button onclick="window.location.href= 'about.html'"><span></span>ABOUT US</button>
+
+  
         </div>
     </div>
 
-   
 </body>
+<script>
+    window.onload = () => {
+        loadProducts();
+        const sortSelect = document.getElementById('sortOption');
+        sortSelect.addEventListener('change', (event) => {
+            sortProducts(event.target.value);
+        });
+    };
+    function checkAuthStatus() {
+  const authLink = document.getElementById('auth-link');
+  const token = getCookie('token');
+  
+  if (token) {
+    authLink.textContent = 'LOGOUT';
+    authLink.onclick = logout; // Установите обработчик события logout
+  } else {
+    authLink.textContent = 'LOGIN';
+    authLink.onclick = login; // Установите обработчик события login
+  }
+  }
+  
+  // Функция для получения значения cookie
+  function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  }
+  
+  // Предположим, что функции login и logout уже определены где-то в вашем коде
+  function login() {
+  // Логика входа в систему
+  }
+  
+  function logout() {
+  // Логика выхода из системы
+  }
+  
+  // Вызовите функцию checkAuthStatus при загрузке страницы
+  window.onload = checkAuthStatus;
+  </script>
 </html>

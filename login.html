@@ -1,73 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <link rel="stylesheet" href="login.css">
-    <link rel="stylesheet" href="nav.css">
+    <meta charset="UTF-8">
     <title>Game Shop</title>
-  </head>
-  <body>
-  
-    <header>
-      <header class="header">
+    <link rel="stylesheet" href="nav.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="login.css">
+</head>
+<body>
+    <header class="header">
         <a href="index.html" class="Logo">Logo</a>
         <nav class="navbar">
             <a href="index.html">HOME</a>
-            <a href="buy.html">BUY</a>
+            <a href="product.html">BUY</a>
             <a href="about.html">ABOUT</a>
-            <a href="login.html">LOGIN</a>
+            <a href="#" id="auth-link" onclick="showLoginFormOnce()">LOGIN</a>
+            <a href="cart.html" class="icon-cart-link">
+                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
+                </svg>
+            </a>
         </nav>
     </header>
-        </nav>
-    </header>
-<div class="wrapper">
-	
-	<div class="form-box login">
-		<h2>Login</h2>
-		<form action="connect.php">
-			<div class="input-box">
-				<input type="Email" required>
-				<label>Email</label>
+    <div class="wrapper">
+        <div class="form-box login" id="login-form" style="display:none;">
+            <h2>Login</h2>
+            <div class="input-box">
+                <input type="email" id="login_email" required>
+                <label>Email</label>
+            </div>
+            <div class="input-box">
+                <input type="password" id="login_password" required>
+                <label>Password</label>
+            </div>
+            <button type="submit" class="btn" onclick="login()">Login</button>
+        </div>
+    </div>
+    <script>
+        const backendURL = 'http://localhost:5000';
 
-			</div>
-			<div class="input-box">
-				<input type="password" required>
-				<label>Password</label>
-			</div>
-			<div class="remember-forgot">
-				<label><input type="checkbox">Remember me</label>
-				<a href="#">Forgot password</a>
-			</div>
-			<button type="submit" class="btn">Login</button>
-			<div class="login-register">
-				<p>Don't have an account? <a href="#" class="register-link">Register</a></p>
+        document.addEventListener('DOMContentLoaded', () => {
+            const authLink = document.getElementById('auth-link');
+            const token = getCookie('token');
 
-			</div>
-		</form>
-	</div>
-	<div class="form-box register">
-	<h2>Registration</h2>
-	<form action="connect.php" method="post">
-		<div class="input-box">
-			<input type="text" name="username" required>
-			<label>Username</label>
-		</div>
-		<div class="input-box">
-			<input type="email" name="email" required>
-			<label>Email</label>
-		</div>
-		<div class="input-box">
-			<input type="password" name="password" required>
-			<label>Password</label>
-		</div>
-		<div class="remember-forgot">
-			<label><input type="checkbox" name="terms">I agree to the terms & conditions</label>
-		</div>
-		<button type="submit" class="btn">Register</button>
-	</form>
-		<div class="login-register">
-			<p>Already have an account? <a href="#" class="login-link">Login</a></p>
+            if (token) {
+                authLink.textContent = 'LOGOUT';
+                authLink.addEventListener('click', logout);
+            } else {
+                authLink.textContent = 'LOGIN';
+                authLink.addEventListener('click', showLoginFormOnce);
+            }
+        });
 
-		</div>
-</div>
+        function showLoginFormOnce(event) {
+            const loginForm = document.getElementById('login-form');
+            if (loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                const authLink = document.getElementById('auth-link');
+                authLink.removeEventListener('click', showLoginFormOnce);
+            }
+        }
 
+        async function login() {
+            const email = document.getElementById('login_email').value;
+            const password = document.getElementById('login_password').value;
 
-</div>
-<script src="login.js"></script>
+            const response = await fetch(`${backendURL}/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    email: email,
+                    password: password
+                })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                // alert('Login successful!');
+                document.cookie = `token=${data.token}; path=/`;
+                const authLink = document.getElementById('auth-link');
+                authLink.textContent = 'LOGOUT';
+                authLink.removeEventListener('click', showLoginFormOnce);
+                authLink.addEventListener('click', logout);
+                document.getElementById('login-form').style.display = 'none';
+                window.location.href = 'product.html';
+            } else {
+                alert(data.message);
+            }
+        }
+
+        async function logout() {
+            const token = getCookie('token');
+            if (!token) {
+                alert('No token found');
+                return;
+            }
+
+            const response = await fetch(`${backendURL}/logout`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': token
+                }
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('Logout successful!');
+                document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+                // const authLink = document.getElementById('auth-link');
+                // authLink.textContent = 'LOGIN';
+                // authLink.removeEventListener('click', logout);
+                // authLink.addEventListener('click', showLoginFormOnce);
+                // document.getElementById('login-form').style.display = 'none';
+            } else {
+                alert(data.message);
+            }
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+    </script>
+</body>
+</html>

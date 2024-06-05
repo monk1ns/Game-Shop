@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Game Store</title>
+    <link rel="stylesheet" href="product.css">
+    <link rel="stylesheet" href="nav.css">
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="Logo">Logo</a>
+        <nav class="navbar">
+            <a href="index.html">HOME</a>
+            <a href="product.html">BUY</a>
+            <a href="about.html">ABOUT</a>
+            <a href="login.html" id="auth-link">LOGIN</a>
+            <a href="cart.html" class="icon-cart-link">
+                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <div class="products-container">
+        <div class="sort-options">
+            <form id="sortForm">
+                <label for="sortOption">Sort by:</label>
+                <select id="sortOption">
+                    <option value="default">Default</option>
+                    <option value="price-asc">Price: Low to High</option>
+                    <option value="price-desc">Price: High to Low</option>
+                    <option value="name-asc">Name: A to Z</option>
+                    <option value="name-desc">Name: Z to A</option>
+                </select>
+            </form>
+        </div>
+        <section class="products"></section>
+    </div>
+
+    <script>
+        let products = [];
+
+        function addToCart(product) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart.push(product);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert(`${product.title} added to cart`);
+        }
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('http://127.0.0.1:5000/products');
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                products = await response.json();
+                displayProducts(products);
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        function displayProducts(productsToDisplay) {
+            const productsContainer = document.querySelector('.products');
+            productsContainer.innerHTML = '';
+
+            productsToDisplay.forEach(product => {
+                const productItem = document.createElement('div');
+                productItem.classList.add('product-item');
+
+                const img = document.createElement('img');
+                img.src = product.imageSrc;
+                img.alt = product.title;
+
+                const productInfo = document.createElement('div');
+                productInfo.classList.add('product-info');
+
+                const title = document.createElement('h2');
+                title.textContent = product.title;
+
+                const price = document.createElement('p');
+                price.textContent = `€${product.price.toFixed(2)}`;
+
+                const description = document.createElement('p');
+                description.textContent = product.description;
+
+                const addToCartButton = document.createElement('button');
+                addToCartButton.textContent = 'Add to Cart';
+                addToCartButton.onclick = () => addToCart(product);
+
+                productInfo.appendChild(title);
+                productInfo.appendChild(price);
+                productInfo.appendChild(description);
+                productInfo.appendChild(addToCartButton);
+
+                productItem.appendChild(img);
+                productItem.appendChild(productInfo);
+
+                productsContainer.appendChild(productItem);
+            });
+        }
+
+        function sortProducts(criteria) {
+            let sortedProducts;
+            if (criteria === 'price-asc') {
+                sortedProducts = products.slice().sort((a, b) => a.price - b.price);
+            } else if (criteria === 'price-desc') {
+                sortedProducts = products.slice().sort((a, b) => b.price - a.price);
+            } else if (criteria === 'name-asc') {
+                sortedProducts = products.slice().sort((a, b) => a.title.localeCompare(b.title));
+            } else if (criteria === 'name-desc') {
+                sortedProducts = products.slice().sort((a, b) => b.title.localeCompare(a.title));
+            } else {
+                sortedProducts = products;
+            }
+            displayProducts(sortedProducts);
+        }
+
+        function checkAuthStatus() {
+            const authLink = document.getElementById('auth-link');
+            const token = getCookie('token');
+
+            if (token) {
+                authLink.textContent = 'LOGOUT';
+                authLink.onclick = logout;
+            } else {
+                authLink.textContent = 'LOGIN';
+                authLink.onclick = login;
+            }
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        function login() {
+            // Login logic
+        }
+
+        function logout() {
+            // Logout logic
+        }
+
+        window.onload = () => {
+            loadProducts();
+            checkAuthStatus();
+            const sortSelect = document.getElementById('sortOption');
+            sortSelect.addEventListener('change', (event) => {
+                sortProducts(event.target.value);
+            });
+        };
+    </script>
+</body>
+</html>

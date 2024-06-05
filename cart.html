@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online Game Store - Cart</title>
+    <link rel="stylesheet" href="cart.css">
+    <link rel="stylesheet" href="nav.css">
+    
+    <script>
+        function removeFromCart(index) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            cart.splice(index, 1);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCartItems();
+        }
+
+        function loadCartItems() {
+            const cartContainer = document.querySelector('.cart-items');
+            cartContainer.innerHTML = ''; // Clear previous items
+
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+
+            if (cart.length === 0) {
+                cartContainer.innerHTML = '<p>Your cart is empty</p>';
+                document.querySelector('.summary-details .total-price').textContent = '€0.00';
+                return;
+            }
+
+            cart.forEach((item, index) => {
+                const cartItem = document.createElement('div');
+                cartItem.classList.add('cart-item');
+
+                const itemInfo = document.createElement('div');
+                itemInfo.classList.add('item-info');
+
+                const img = document.createElement('img');
+                img.src = item.imageSrc;
+                img.alt = item.title;
+
+                const infoDiv = document.createElement('div');
+                const title = document.createElement('h3');
+                title.textContent = item.title;
+
+                const platform = document.createElement('p');
+                platform.textContent = `Platform: ${item.platform}`;
+
+                const genre = document.createElement('p');
+                genre.textContent = `Genre: ${item.genre}`;
+
+                infoDiv.appendChild(title);
+                infoDiv.appendChild(platform);
+                infoDiv.appendChild(genre);
+
+                itemInfo.appendChild(img);
+                itemInfo.appendChild(infoDiv);
+
+                const itemActions = document.createElement('div');
+                itemActions.classList.add('item-actions');
+
+                const price = document.createElement('span');
+                price.classList.add('item-price');
+                price.textContent = `€${item.price.toFixed(2)}`;
+
+                const removeButton = document.createElement('button');
+                removeButton.classList.add('remove-btn');
+                removeButton.textContent = 'Remove';
+                removeButton.onclick = () => removeFromCart(index);
+
+                itemActions.appendChild(price);
+                itemActions.appendChild(removeButton);
+
+                cartItem.appendChild(itemInfo);
+                cartItem.appendChild(itemActions);
+
+                cartContainer.appendChild(cartItem);
+            });
+
+            // Update total price
+            const totalPrice = cart.reduce((total, item) => total + item.price, 0);
+            document.querySelector('.summary-details .total-price').textContent = `€${totalPrice.toFixed(2)}`;
+        }
+
+        function submitOrder() {
+            const formData = new FormData(document.getElementById('order-form'));
+            const orderData = {};
+            formData.forEach((value, key) => {
+                orderData[key] = value;
+            });
+
+            orderData.items = JSON.parse(localStorage.getItem('cart')) || [];
+
+            fetch('/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to submit order');
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Order successfully submitted:', data);
+                localStorage.removeItem('cart');
+                loadCartItems();
+                alert('Your order has been submitted successfully!');
+            })
+            .catch(error => {
+                console.error('Error submitting order:', error);
+                alert('Failed to submit your order. Please try again later.');
+            });
+        }
+
+        function checkAuthStatus() {
+            const authLink = document.getElementById('auth-link');
+            const token = getCookie('token');
+
+            if (token) {
+                authLink.textContent = 'LOGOUT';
+                authLink.onclick = logout; // Set logout event handler
+            } else {
+                authLink.textContent = 'LOGIN';
+                authLink.onclick = login; // Set login event handler
+            }
+        }
+
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+        }
+
+        function login() {
+            // Login logic
+        }
+
+        function logout() {
+            // Logout logic
+        }
+
+        window.onload = () => {
+            loadCartItems();
+            checkAuthStatus();
+        };
+    </script>
+</head>
+<body>
+    <header class="header">
+        <a href="index.html" class="Logo">Logo</a>
+        <nav class="navbar">
+            <a href="index.html">HOME</a>
+            <a href="product.html">BUY</a>
+            <a href="about.html">ABOUT</a>
+            <a href="login.html" id="auth-link">LOGIN</a>
+            <a href="cart.html" class="icon-cart-link">
+                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h1.5L9 16m0 0h8m-8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm8 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm-8.5-3h9.25L19 7H7.312"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+    
+
+    <section class="cart">
+        <div class="cart-container">
+            <div class="cart-items">
+                <h2>Your Cart</h2>
+                <!-- Список товаров в корзине -->
+            </div>
+            <div class="cart-summary">
+                <h2>Summary</h2>
+                <div class="summary-details">
+                    <p>Total Price: <span class="total-price"></span></p>
+                </div>
+                <!-- Форма для заполнения заказа -->
+                <form id="order-form">
+                    <h3>Fill in your details:</h3>
+                    <label for="name">Name:</label><br>
+                    <input type="text" id="name" name="name" required><br><br>
+                    <label for="email">Email:</label><br>
+                    <input type="email" id="email" name="email" required><br><br>
+                    <label for="address">Address:</label><br>
+                    <textarea id="address" name="address" required></textarea><br><br>
+                    <button type="submit" class="checkout-btn">Place Order</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

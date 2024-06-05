@@ -1,0 +1,67 @@
+[
+    {
+      "id": "game1",
+      "title": "Action Game",
+      "imageSrc": "R.jpg",
+      "genre": "Action",
+      "price": 59.99,
+      "description": "A thrilling action game that will keep you on the edge of your seat."
+    },
+    {
+      "id": "game2",
+      "title": "Adventure Game",
+      "imageSrc": "274px-GTAV_Official_Cover_Art.jpg",
+      "genre": "Adventure",
+      "price": 49.99,
+      "description": "Embark on an epic adventure through a vast open world."
+    },
+    {
+      "id": "game3",
+      "title": "Puzzle Game",
+      "imageSrc": "forza.jpg",
+      "genre": "Puzzle",
+      "price": 39.99,
+      "description": "Solve intricate puzzles to progress through the game."
+    },
+    {
+      "id": "game4",
+      "title": "Another Puzzle Game",
+      "imageSrc": "forza.jpg",
+      "genre": "Puzzle",
+      "price": 39.99,
+      "description": "A challenging puzzle game that tests your problem-solving skills."
+    },
+    {
+      "id": "game5",
+      "title": "Puzzle Game Again",
+      "imageSrc": "R.jpg",
+      "genre": "Puzzle",
+      "price": 39.99,
+      "description": "Engage in another round of brain-teasing puzzles."
+    },
+    {
+      "id": "game6",
+      "title": "GTA V",
+      "imageSrc": "274px-GTAV_Official_Cover_Art.jpg",
+      "genre": "Action-Adventure",
+      "price": 39.99,
+      "description": "Experience the chaotic freedom of Los Santos like never before."
+    },
+    {
+      "id": "game7",
+      "title": "Another Puzzle Game",
+      "imageSrc": "R.jpg",
+      "genre": "Puzzle",
+      "price": 49.99,
+      "description": "A delightful puzzle game that offers a unique gaming experience."
+    },
+    {
+      "id": "game8",
+      "title": "Adventure Game",
+      "imageSrc": "forza.jpg",
+      "genre": "Adventure",
+      "price": 55.99,
+      "description": "Journey through a beautiful world filled with challenges and surprises."
+    }
+  ]
+  

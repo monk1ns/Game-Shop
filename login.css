@@ -103,28 +103,6 @@ body{
 	padding: 0 35px 0 5px;
 }
 
-.remember-forgot{
-	font-size: .9em;
-	color: #000;
-	font-weight: 500;
-	margin: -15px 0 15px;
-	display:flex;
-	justify-content: space-between;
-}
-
-.remember-forgot label input{
-	accent-color: #000000 ;
-	margin-right: 0px;
-}
-
-.remember-forgot a{
-	color: #000;
-	text-decoration: none;
-}
-
-.remember-forgot a:hover{
-	text-decoration: underline;
-}
 
 .btn{
 	width: 100%;
@@ -157,3 +135,5 @@ body{
 .login-register p a:hover{
 	text-decoration: underline;
 }
+
+
