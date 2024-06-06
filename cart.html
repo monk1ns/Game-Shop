@@ -82,38 +82,47 @@
         }
 
         function submitOrder() {
-            const formData = new FormData(document.getElementById('order-form'));
-            const orderData = {};
-            formData.forEach((value, key) => {
-                orderData[key] = value;
-            });
+    let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-            orderData.items = JSON.parse(localStorage.getItem('cart')) || [];
+    if (cart.length === 0) {
+        alert('Your cart is empty.');
+        return;
+    }
 
-            fetch('/orders', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(orderData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Failed to submit order');
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Order successfully submitted:', data);
-                localStorage.removeItem('cart');
-                loadCartItems();
-                alert('Your order has been submitted successfully!');
-            })
-            .catch(error => {
-                console.error('Error submitting order:', error);
-                alert('Failed to submit your order. Please try again later.');
-            });
+    const orderData = {
+        items: cart,
+        totalPrice: cart.reduce((total, item) => total + item.price, 0)
+    };
+
+    console.log('Submitting order:', orderData); // Logging order data
+
+    fetch('http://127.0.0.1:5000/orders', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(orderData)
+    })
+    .then(response => {
+        console.log('Server response status:', response.status); // Logging server response status
+        if (!response.ok) {
+            return response.json().then(err => { throw new Error(`Server error: ${err.message}`) });
         }
+        return response.json().catch(() => {
+            throw new Error('Failed to parse JSON response');
+        });
+    })
+    .then(data => {
+        console.log('Order successfully submitted:', data);
+        localStorage.removeItem('cart');
+        loadCartItems();
+        alert('Your order has been submitted successfully!');
+    })
+    .catch(error => {
+        console.error('Error submitting order:', error);
+        alert(`Failed to submit your order: ${error.message}`);
+    });
+}
 
         function checkAuthStatus() {
             const authLink = document.getElementById('auth-link');
@@ -164,7 +173,6 @@
         </nav>
     </header>
     
-
     <section class="cart">
         <div class="cart-container">
             <div class="cart-items">
@@ -174,19 +182,9 @@
             <div class="cart-summary">
                 <h2>Summary</h2>
                 <div class="summary-details">
-                    <p>Total Price: <span class="total-price"></span></p>
+                    <p>Total Price: <span class="total-price">€0.00</span></p>
                 </div>
-                <!-- Форма для заполнения заказа -->
-                <form id="order-form">
-                    <h3>Fill in your details:</h3>
-                    <label for="name">Name:</label><br>
-                    <input type="text" id="name" name="name" required><br><br>
-                    <label for="email">Email:</label><br>
-                    <input type="email" id="email" name="email" required><br><br>
-                    <label for="address">Address:</label><br>
-                    <textarea id="address" name="address" required></textarea><br><br>
-                    <button type="submit" class="checkout-btn">Place Order</button>
-                </form>
+                <button type="button" class="checkout-btn" onclick="submitOrder()">Place Order</button>
             </div>
         </div>
     </section>
