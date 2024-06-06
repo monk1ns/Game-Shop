@@ -1,5 +1,12 @@
 # Game-Shop
 Game Shop
+
+Izmantotie rīki 
+Python
+Html
+Css
+JavasScript 
+
 tests:
 
 | Test Case Name                                   | Test Step | Test Data                                                                         | Expected Result        | Actual Result     | Remarks |
