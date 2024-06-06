@@ -2,10 +2,10 @@
 Game Shop
 
 Izmantotie rīki 
-Python
-Html
-Css
-JavasScript 
+- Python
+- Html
+- Css
+- JavasScript 
 
 tests:
 
