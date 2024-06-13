@@ -24,23 +24,51 @@
     </header>
 
     <div class="products-container">
-        <div class="sort-options">
+        <div class="sort-and-search-container">
             <form id="sortForm">
-                <label for="sortOption">Sort by:</label>
-                <select id="sortOption">
-                    <option value="default">Default</option>
-                    <option value="price-asc">Price: Low to High</option>
-                    <option value="price-desc">Price: High to Low</option>
-                    <option value="name-asc">Name: A to Z</option>
-                    <option value="name-desc">Name: Z to A</option>
-                </select>
+                <div class="sort-options">
+                    <label for="sortOption">Sort by:</label>
+                    <select id="sortOption">
+                        <option value="default">Default</option>
+                        <option value="price-asc">Price: Low to High</option>
+                        <option value="price-desc">Price: High to Low</option>
+                        <option value="name-asc">Name: A to Z</option>
+                        <option value="name-desc">Name: Z to A</option>
+                    </select>
+                </div>
             </form>
+            <div class="search-input">
+                <input type="text" id="searchInput" placeholder="Search by name...">
+                <button type="button" onclick="searchProducts(document.getElementById('searchInput').value)">Search</button>
+            </div>
+            <div class="price-input">
+                <input type="number" id="maxPriceInput" placeholder="Max price">
+                <button type="button" onclick="filterByPrice()">Filter</button>
+            </div>
         </div>
         <section class="products"></section>
     </div>
 
+    <!-- Edit Product Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeEditModal()">&times;</span>
+            <h2>Edit Product</h2>
+            <form id="editForm">
+                <label for="editTitle">Title:</label>
+                <input type="text" id="editTitle" name="title">
+                <label for="editDescription">Description:</label>
+                <textarea id="editDescription" name="description"></textarea>
+                <label for="editPrice">Price:</label>
+                <input type="number" id="editPrice" name="price" step="0.01">
+                <button type="button" onclick="saveProductChanges()">Save</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         let products = [];
+        let currentProductId = null;
 
         function addToCart(product) {
             let cart = JSON.parse(localStorage.getItem('cart')) || [];
@@ -69,6 +97,7 @@
             productsToDisplay.forEach(product => {
                 const productItem = document.createElement('div');
                 productItem.classList.add('product-item');
+                productItem.dataset.productId = product._id.$oid;
 
                 const img = document.createElement('img');
                 img.src = product.imageSrc;
@@ -99,7 +128,15 @@
                 productItem.appendChild(productInfo);
 
                 productsContainer.appendChild(productItem);
+
+                // Check if user is authenticated to show edit and delete buttons
+                checkAuthStatus();
             });
+
+            // Check if there was a product being edited before page reload
+            if (currentProductId) {
+                openEditModal(products.find(p => p._id.$oid === currentProductId));
+            }
         }
 
         function sortProducts(criteria) {
@@ -118,6 +155,27 @@
             displayProducts(sortedProducts);
         }
 
+        function searchProducts(query) {
+            const filteredProducts = products.filter(product =>
+                product.title.toLowerCase().includes(query.toLowerCase())
+            );
+            displayProducts(filteredProducts);
+        }
+
+        function filterByPrice() {
+            const maxPrice = parseFloat(document.getElementById('maxPriceInput').value);
+
+            const filteredProducts = products.filter(product => {
+                if (!isNaN(maxPrice)) {
+                    return product.price <= maxPrice;
+                } else {
+                    return true;
+                }
+            });
+
+            displayProducts(filteredProducts);
+        }
+
         function checkAuthStatus() {
             const authLink = document.getElementById('auth-link');
             const token = getCookie('token');
@@ -125,34 +183,147 @@
             if (token) {
                 authLink.textContent = 'LOGOUT';
                 authLink.onclick = logout;
-            } else {
-                authLink.textContent = 'LOGIN';
-                authLink.onclick = login;
-            }
-        }
 
-        function getCookie(name) {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(';').shift();
-        }
+                // Show edit and delete buttons for authenticated users
+                const productItems = document.querySelectorAll('.product-item');
+                productItems.forEach(item => {
+                    if (!item.querySelector('button.edit')) {
+                        const editButton = document.createElement('button');
+                        editButton.textContent = 'Edit';
+                        editButton.classList.add('edit');
+                        editButton.onclick = () => editProduct(item.dataset.productId);
 
-        function login() {
-            // Login logic
-        }
-
-        function logout() {
-            // Logout logic
-        }
-
-        window.onload = () => {
-            loadProducts();
-            checkAuthStatus();
-            const sortSelect = document.getElementById('sortOption');
-            sortSelect.addEventListener('change', (event) => {
-                sortProducts(event.target.value);
+                        const deleteButton = document.createElement('button');
+deleteButton.textContent = 'Delete';
+deleteButton.classList.add('delete');
+deleteButton.onclick = () => deleteProduct(item.dataset.productId);
+item.appendChild(editButton);
+                    item.appendChild(deleteButton);
+                }
             });
+        } else {
+            authLink.textContent = 'LOGIN';
+            authLink.onclick = login;
+        }
+    }
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function login() {
+        // Logic for login
+    }
+
+    function logout() {
+        // Logic for logout
+    }
+
+    function editProduct(productId) {
+        const product = products.find(p => p._id.$oid === productId);
+        if (product) {
+            openEditModal(product);
+        } else {
+            alert('Product not found.');
+        }
+    }
+
+    function openEditModal(product) {
+        currentProductId = product._id.$oid;
+        document.getElementById('editTitle').value = product.title;
+        document.getElementById('editDescription').value = product.description;
+        document.getElementById('editPrice').value = product.price;
+        document.getElementById('editModal').style.display = 'flex'; // Change display to flex
+    }
+
+    function closeEditModal() {
+        document.getElementById('editModal').style.display = 'none';
+    }
+
+    function saveProductChanges() {
+        const updatedProduct = {
+            title: document.getElementById('editTitle').value,
+            description: document.getElementById('editDescription').value,
+            price: parseFloat(document.getElementById('editPrice').value)
         };
-    </script>
-</body>
-</html>
+
+        fetch(`http://127.0.0.1:5000/products/${currentProductId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': getCookie('token')
+            },
+            body: JSON.stringify(updatedProduct)
+        })
+        .then(response => {
+            if (response.ok) {
+                alert('Product updated successfully.');
+                closeEditModal();
+                loadProducts(); // Reload products after update
+            } else {
+                throw new Error('Failed to update product');
+            }
+        })
+        .catch(error => {
+            console.error('Error updating product:', error);
+            alert('Failed to update product. Please try again later.');
+        });
+    }
+
+    // Close modal when clicking on the close button
+    document.querySelector('.close').onclick = closeEditModal;
+
+    // Close modal when clicking outside the modal
+    window.onclick = function(event) {
+        const modal = document.getElementById('editModal');
+        if (event.target === modal) {
+            closeEditModal();
+        }
+    };
+
+    function deleteProduct(productId) {
+        fetch(`http://127.0.0.1:5000/products/${productId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': getCookie('token')
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                alert(`Product with ID ${productId} deleted successfully.`);
+                loadProducts(); // Reload products after deletion
+            } else {
+                throw new Error('Failed to delete product');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting product:', error);
+            alert('Failed to delete product. Please try again later.');
+        });
+    }
+
+    // Load products on page load
+    window.onload = () => {
+        loadProducts();
+
+        // Event listener for sorting products
+        const sortSelect = document.getElementById('sortOption');
+        sortSelect.addEventListener('change', (event) => {
+            sortProducts(event.target.value);
+        });
+
+        // Event listener for searching products
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', (event) => {
+            const query = event.target.value;
+            if (query.trim()) {
+                searchProducts(query);
+            } else {
+                loadProducts(); // Reload all products if search input is empty
+            }
+        });
+    };
+</script>
