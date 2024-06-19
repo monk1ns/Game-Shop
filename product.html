@@ -25,6 +25,7 @@
 
     <div class="products-container">
         <div class="sort-and-search-container">
+            <!-- Форма для сортировки -->
             <form id="sortForm">
                 <div class="sort-options">
                     <label for="sortOption">Sort by:</label>
@@ -37,19 +38,42 @@
                     </select>
                 </div>
             </form>
+
+            <!-- Поле для поиска -->
             <div class="search-input">
                 <input type="text" id="searchInput" placeholder="Search by name...">
                 <button type="button" onclick="searchProducts(document.getElementById('searchInput').value)">Search</button>
             </div>
+
+            <!-- Фильтр по цене -->
             <div class="price-input">
                 <input type="number" id="maxPriceInput" placeholder="Max price">
                 <button type="button" onclick="filterByPrice()">Filter</button>
             </div>
         </div>
+
+        <!-- Секция для отображения продуктов -->
         <section class="products"></section>
     </div>
 
-    <!-- Edit Product Modal -->
+    <!-- Форма для добавления продукта -->
+    <form id="addProductForm">
+        <label for="title">Title:</label>
+        <input type="text" id="title" name="title" required>
+
+        <label for="description">Description:</label>
+        <textarea id="description" name="description" required></textarea>
+
+        <label for="price">Price:</label>
+        <input type="number" id="price" name="price" step="0.01" required>
+
+        <label for="image_url">Image URL:</label>
+        <input type="text" id="image_url" name="image_url" required>
+
+        <button type="submit">Add Product</button>
+    </form>
+
+    <!-- Модальное окно для редактирования продукта -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <span class="close" onclick="closeEditModal()">&times;</span>
@@ -66,17 +90,18 @@
         </div>
     </div>
 
+    <!-- Подключение библиотеки SweetAlert2 для уведомлений -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- JavaScript код -->
     <script>
+        // Список продуктов
         let products = [];
+
+        // Идентификатор текущего редактируемого продукта
         let currentProductId = null;
 
-        function addToCart(product) {
-            let cart = JSON.parse(localStorage.getItem('cart')) || [];
-            cart.push(product);
-            localStorage.setItem('cart', JSON.stringify(cart));
-            alert(`${product.title} added to cart`);
-        }
-
+        // Функция для загрузки списка продуктов с сервера
         async function loadProducts() {
             try {
                 const response = await fetch('http://127.0.0.1:5000/products');
@@ -90,6 +115,7 @@
             }
         }
 
+        // Функция для отображения списка продуктов на странице
         function displayProducts(productsToDisplay) {
             const productsContainer = document.querySelector('.products');
             productsContainer.innerHTML = '';
@@ -97,64 +123,99 @@
             productsToDisplay.forEach(product => {
                 const productItem = document.createElement('div');
                 productItem.classList.add('product-item');
-                productItem.dataset.productId = product._id.$oid;
+                productItem.dataset.productId = product.id; // Идентификатор продукта
 
+                // Создание изображения продукта
                 const img = document.createElement('img');
-                img.src = product.imageSrc;
+                img.src = product.image_url;
                 img.alt = product.title;
 
+                // Создание блока информации о продукте
                 const productInfo = document.createElement('div');
                 productInfo.classList.add('product-info');
 
+                // Создание заголовка продукта
                 const title = document.createElement('h2');
                 title.textContent = product.title;
 
+                // Создание блока с ценой продукта
                 const price = document.createElement('p');
                 price.textContent = `€${product.price.toFixed(2)}`;
 
+                // Создание блока с описанием продукта
                 const description = document.createElement('p');
                 description.textContent = product.description;
 
+                // Создание кнопки "Add to Cart"
                 const addToCartButton = document.createElement('button');
                 addToCartButton.textContent = 'Add to Cart';
                 addToCartButton.onclick = () => addToCart(product);
 
+                // Добавление кнопок "Edit" и "Delete" (для аутентифицированных пользователей)
+                const editButton = document.createElement('button');
+                editButton.textContent = 'Edit';
+                editButton.classList.add('auth-required'); // Добавляем класс для скрытия без авторизации
+                editButton.onclick = () => editProduct(product.id);
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.classList.add('auth-required'); // Добавляем класс для скрытия без авторизации
+                deleteButton.onclick = () => deleteProduct(product.id);
+
+                // Добавляем элементы в блок информации о продукте
                 productInfo.appendChild(title);
                 productInfo.appendChild(price);
                 productInfo.appendChild(description);
                 productInfo.appendChild(addToCartButton);
+                productInfo.appendChild(editButton);
+                productInfo.appendChild(deleteButton);
 
+                // Добавляем изображение и информацию о продукте в блок продукта
                 productItem.appendChild(img);
                 productItem.appendChild(productInfo);
 
+                // Добавляем блок продукта в контейнер продуктов
                 productsContainer.appendChild(productItem);
-
-                // Check if user is authenticated to show edit and delete buttons
-                checkAuthStatus();
             });
 
-            // Check if there was a product being edited before page reload
-            if (currentProductId) {
-                openEditModal(products.find(p => p._id.$oid === currentProductId));
+            // Проверка статуса аутентификации при загрузке
+            checkAuthStatus();
+        }
+
+        // Функция для добавления продукта в корзину
+        async function addToCart(product) {
+            try {
+                let cart = JSON.parse(localStorage.getItem('cart')) || [];
+                cart.push(product);
+                localStorage.setItem('cart', JSON.stringify(cart));
+
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "bottom-end",
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true,
+                    didOpen: (                    toast) => {
+                        toast.addEventListener('mouseenter', Swal.stopTimer);
+                        toast.addEventListener('mouseleave', Swal.resumeTimer);
+                    }
+                });
+                Toast.fire({
+                    icon: "success",
+                    title: "Product added to cart"
+                });
+            } catch (error) {
+                console.error('Error adding product to cart:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed to add product to cart',
+                    text: 'An error occurred while adding the product to cart. Please try again later.',
+                    confirmButtonText: 'OK'
+                });
             }
         }
 
-        function sortProducts(criteria) {
-            let sortedProducts;
-            if (criteria === 'price-asc') {
-                sortedProducts = products.slice().sort((a, b) => a.price - b.price);
-            } else if (criteria === 'price-desc') {
-                sortedProducts = products.slice().sort((a, b) => b.price - a.price);
-            } else if (criteria === 'name-asc') {
-                sortedProducts = products.slice().sort((a, b) => a.title.localeCompare(b.title));
-            } else if (criteria === 'name-desc') {
-                sortedProducts = products.slice().sort((a, b) => b.title.localeCompare(a.title));
-            } else {
-                sortedProducts = products;
-            }
-            displayProducts(sortedProducts);
-        }
-
+        // Функция для поиска продуктов по названию
         function searchProducts(query) {
             const filteredProducts = products.filter(product =>
                 product.title.toLowerCase().includes(query.toLowerCase())
@@ -162,6 +223,7 @@
             displayProducts(filteredProducts);
         }
 
+        // Функция для фильтрации продуктов по цене
         function filterByPrice() {
             const maxPrice = parseFloat(document.getElementById('maxPriceInput').value);
 
@@ -176,154 +238,158 @@
             displayProducts(filteredProducts);
         }
 
-        function checkAuthStatus() {
-            const authLink = document.getElementById('auth-link');
-            const token = getCookie('token');
+        // Функция для редактирования продукта
+        function editProduct(productId) {
+            const product = products.find(p => p.id === productId);
+            if (product) {
+                openEditModal(product);
+            } else {
+                alert('Product not found.');
+            }
+        }
 
-            if (token) {
-                authLink.textContent = 'LOGOUT';
-                authLink.onclick = logout;
+        // Функция для открытия модального окна редактирования продукта
+        function openEditModal(product) {
+            currentProductId = product.id;
+            document.getElementById('editTitle').value = product.title;
+            document.getElementById('editDescription').value = product.description;
+            document.getElementById('editPrice').value = product.price;
+            document.getElementById('editModal').style.display = 'flex'; // Изменение стиля для отображения модального окна
+        }
 
-                // Show edit and delete buttons for authenticated users
-                const productItems = document.querySelectorAll('.product-item');
-                productItems.forEach(item => {
-                    if (!item.querySelector('button.edit')) {
-                        const editButton = document.createElement('button');
-                        editButton.textContent = 'Edit';
-                        editButton.classList.add('edit');
-                        editButton.onclick = () => editProduct(item.dataset.productId);
+        // Функция для закрытия модального окна редактирования продукта
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none'; // Изменение стиля для скрытия модального окна
+        }
 
-                        const deleteButton = document.createElement('button');
-deleteButton.textContent = 'Delete';
-deleteButton.classList.add('delete');
-deleteButton.onclick = () => deleteProduct(item.dataset.productId);
-item.appendChild(editButton);
-                    item.appendChild(deleteButton);
+        // Функция для сохранения изменений продукта
+        function saveProductChanges() {
+            Swal.fire({
+                title: "Do you want to save the changes?",
+                showDenyButton: true,
+                showCancelButton: true,
+                confirmButtonText: "Save",
+                denyButtonText: `Don't save`
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const updatedProduct = {
+                        title: document.getElementById('editTitle').value,
+                        description: document.getElementById('editDescription').value,
+                        price: parseFloat(document.getElementById('editPrice').value)
+                    };
+
+                    fetch(`http://127.0.0.1:5000/products/${currentProductId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                            // Добавьте заголовок авторизации, если необходимо
+                        },
+                        body: JSON.stringify(updatedProduct)
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            Swal.fire("Saved!", "", "success");
+                            closeEditModal();
+                            loadProducts(); // Перезагрузка списка продуктов после обновления
+                        } else {
+                            throw new Error('Failed to update product');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating product:', error);
+                        Swal.fire("Failed to update product. Please try again later.", "", "error");
+                    });
+                } else if (result.isDenied) {
+                    Swal.fire("Changes are not saved", "", "info");
                 }
             });
-        } else {
-            authLink.textContent = 'LOGIN';
-            authLink.onclick = login;
         }
-    }
 
-    function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
-        if (parts.length === 2) return parts.pop().split(';').shift();
-    }
-
-    function login() {
-        // Logic for login
-    }
-
-    function logout() {
-        // Logic for logout
-    }
-
-    function editProduct(productId) {
-        const product = products.find(p => p._id.$oid === productId);
-        if (product) {
-            openEditModal(product);
-        } else {
-            alert('Product not found.');
+        // Функция для удаления продукта
+        // Функция для удаления продукта
+function deleteProduct(productId) {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`http://127.0.0.1:5000/products/${productId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Добавьте сюда заголовок авторизации, если это необходимо
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    Swal.fire({
+                        title: "Deleted!",
+                        text: `Your product has been deleted.`,
+                        icon: "success"
+                    });
+                    loadProducts(); // Перезагрузка списка продуктов после удаления
+                } else {
+                    throw new Error('Failed to delete product');
+                }
+            })
+            .catch(error => {
+                console.error('Error deleting product:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to delete product. Please try again later.',
+                    icon: 'error'
+                });
+            });
         }
-    }
+    });
+}
 
-    function openEditModal(product) {
-        currentProductId = product._id.$oid;
-        document.getElementById('editTitle').value = product.title;
-        document.getElementById('editDescription').value = product.description;
-        document.getElementById('editPrice').value = product.price;
-        document.getElementById('editModal').style.display = 'flex'; // Change display to flex
-    }
+        // Функция для проверки статуса аутентификации пользователя
+        function checkAuthStatus() {
+            const isLoggedIn = true; // Здесь должна быть проверка вашего механизма авторизации (например, проверка наличия токена)
+            const authElements = document.querySelectorAll('.auth-required'); // Выбираем все элементы, требующие авторизации
 
-    function closeEditModal() {
-        document.getElementById('editModal').style.display = 'none';
-    }
+            if (isLoggedIn) {
+                authElements.forEach(element => {
+                    element.style.display = 'block'; // Показываем элементы, требующие авторизации
+                });
+            } else {
+                authElements.forEach(element => {
+                    element.style.display = 'none'; // Скрываем элементы, требующие авторизации
+                });
+            }
+        }
 
-    function saveProductChanges() {
-        const updatedProduct = {
-            title: document.getElementById('editTitle').value,
-            description: document.getElementById('editDescription').value,
-            price: parseFloat(document.getElementById('editPrice').value)
+        // Загрузка списка продуктов при загрузке страницы
+        window.onload = () => {
+            loadProducts();
+
+            // Добавление обработчика событий для сортировки продуктов
+            const sortSelect = document.getElementById('sortOption');
+            sortSelect.addEventListener('change', (event) => {
+                sortProducts(event.target.value);
+            });
+
+            // Добавление обработчика событий для поиска продуктов
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', (event) => {
+                const query = event.target.value;
+                if (query.trim()) {
+                    searchProducts(query);
+                } else {
+                    loadProducts(); // Перезагрузка всех продуктов, если поле поиска пустое
+                }
+            });
+
+            // Проверка статуса аутентификации при загрузке страницы
+            checkAuthStatus();
         };
+    </script>
+</body>
+</html>
 
-        fetch(`http://127.0.0.1:5000/products/${currentProductId}`, {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': getCookie('token')
-            },
-            body: JSON.stringify(updatedProduct)
-        })
-        .then(response => {
-            if (response.ok) {
-                alert('Product updated successfully.');
-                closeEditModal();
-                loadProducts(); // Reload products after update
-            } else {
-                throw new Error('Failed to update product');
-            }
-        })
-        .catch(error => {
-            console.error('Error updating product:', error);
-            alert('Failed to update product. Please try again later.');
-        });
-    }
-
-    // Close modal when clicking on the close button
-    document.querySelector('.close').onclick = closeEditModal;
-
-    // Close modal when clicking outside the modal
-    window.onclick = function(event) {
-        const modal = document.getElementById('editModal');
-        if (event.target === modal) {
-            closeEditModal();
-        }
-    };
-
-    function deleteProduct(productId) {
-        fetch(`http://127.0.0.1:5000/products/${productId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': getCookie('token')
-            }
-        })
-        .then(response => {
-            if (response.ok) {
-                alert(`Product with ID ${productId} deleted successfully.`);
-                loadProducts(); // Reload products after deletion
-            } else {
-                throw new Error('Failed to delete product');
-            }
-        })
-        .catch(error => {
-            console.error('Error deleting product:', error);
-            alert('Failed to delete product. Please try again later.');
-        });
-    }
-
-    // Load products on page load
-    window.onload = () => {
-        loadProducts();
-
-        // Event listener for sorting products
-        const sortSelect = document.getElementById('sortOption');
-        sortSelect.addEventListener('change', (event) => {
-            sortProducts(event.target.value);
-        });
-
-        // Event listener for searching products
-        const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', (event) => {
-            const query = event.target.value;
-            if (query.trim()) {
-                searchProducts(query);
-            } else {
-                loadProducts(); // Reload all products if search input is empty
-            }
-        });
-    };
-</script>

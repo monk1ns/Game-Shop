@@ -39,46 +39,6 @@ def get_orders():
         car_list = list(result)
         return json_util.dumps(car_list)
 
-@app.route('/register', methods=['POST'])
-def register():
-    data = request.get_json()
-
-    if not validateEmail(data['email']):
-        return jsonify({'message': 'Invalid email format'}), 400
-
-    existing_user = users.find_one({'email': data['email']})
-
-    if existing_user:
-        return jsonify({'message': 'User already exists'}), 400
-
-    hashed_password = bcrypt.hashpw(data['password'].encode('utf-8'), bcrypt.gensalt())
-
-    if data['user_type'] == 'individual':
-        user = {
-            'email': data['email'],
-            'password': hashed_password,
-            'first_name': data.get('first_name', ''),
-            'last_name': data.get('last_name', ''),
-            'user_type': 'individual'
-        }
-    elif data['user_type'] == 'organization':
-        user = {
-            'email': data['email'],
-            'password': hashed_password,
-            'org_name': data.get('org_name', ''),
-            'reg_number': data.get('reg_number', ''),
-            'address': data.get('address', ''),
-            'user_type': 'organization'
-        }
-    else:
-        return jsonify({'message': 'Invalid user type'}), 400
-
-    users.insert_one(user)
-    return jsonify({'message': 'User registered successfully'}), 201
-
-def validateEmail(email):
-    return True if '@' in email else False
-
 @app.route('/login', methods=['POST'])
 def login():
     data = request.get_json()
@@ -135,5 +95,18 @@ def update_product(product_id):
             return jsonify({'message': 'Product not found'}), 404
     except Exception as e:
         return jsonify({'message': f'Failed to update product. Error: {str(e)}'}), 500
+
+
+
+@app.route('/products', methods=['POST'])
+def add_product():
+    if request.method == 'POST':
+        data = request.get_json()
+        # Insert logic to add the product to MongoDB
+        products.insert_one(data)
+        return jsonify({'message': 'Product added successfully'}), 201
+    else:
+        return jsonify({'message': 'Method not allowed'}), 405
+
 if __name__ == '__main__':
     app.run(debug=True)

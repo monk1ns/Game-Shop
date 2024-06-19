@@ -15,6 +15,16 @@
             loadCartItems();
         }
 
+        function updateQuantity(index, quantity) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            if (quantity < 1) {
+                quantity = 1;
+            }
+            cart[index].quantity = quantity;
+            localStorage.setItem('cart', JSON.stringify(cart));
+            loadCartItems();
+        }
+
         function loadCartItems() {
             const cartContainer = document.querySelector('.cart-items');
             cartContainer.innerHTML = ''; // Clear previous items
@@ -28,6 +38,11 @@
             }
 
             cart.forEach((item, index) => {
+                // Ensure each item has a quantity property
+                if (!item.hasOwnProperty('quantity')) {
+                    item.quantity = 1;
+                }
+
                 const cartItem = document.createElement('div');
                 cartItem.classList.add('cart-item');
 
@@ -62,12 +77,20 @@
                 price.classList.add('item-price');
                 price.textContent = `€${item.price.toFixed(2)}`;
 
+                const quantityInput = document.createElement('input');
+                quantityInput.type = 'number';
+                quantityInput.min = '1';
+                quantityInput.value = item.quantity;
+                quantityInput.classList.add('quantity-input');
+                quantityInput.onchange = () => updateQuantity(index, parseInt(quantityInput.value));
+
                 const removeButton = document.createElement('button');
                 removeButton.classList.add('remove-btn');
                 removeButton.textContent = 'Remove';
                 removeButton.onclick = () => removeFromCart(index);
 
                 itemActions.appendChild(price);
+                itemActions.appendChild(quantityInput);
                 itemActions.appendChild(removeButton);
 
                 cartItem.appendChild(itemInfo);
@@ -77,52 +100,52 @@
             });
 
             // Update total price
-            const totalPrice = cart.reduce((total, item) => total + item.price, 0);
+            const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
             document.querySelector('.summary-details .total-price').textContent = `€${totalPrice.toFixed(2)}`;
         }
 
         function submitOrder() {
-    let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
 
-    if (cart.length === 0) {
-        alert('Your cart is empty.');
-        return;
-    }
+            if (cart.length === 0) {
+                alert('Your cart is empty.');
+                return;
+            }
 
-    const orderData = {
-        items: cart,
-        totalPrice: cart.reduce((total, item) => total + item.price, 0)
-    };
+            const orderData = {
+                items: cart,
+                totalPrice: cart.reduce((total, item) => total + item.price * item.quantity, 0)
+            };
 
-    console.log('Submitting order:', orderData); // Logging order data
+            console.log('Submitting order:', orderData); // Logging order data
 
-    fetch('http://127.0.0.1:5000/orders', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(orderData)
-    })
-    .then(response => {
-        console.log('Server response status:', response.status); // Logging server response status
-        if (!response.ok) {
-            return response.json().then(err => { throw new Error(`Server error: ${err.message}`) });
+            fetch('http://127.0.0.1:5000/orders', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(orderData)
+            })
+            .then(response => {
+                console.log('Server response status:', response.status); // Logging server response status
+                if (!response.ok) {
+                    return response.json().then(err => { throw new Error(`Server error: ${err.message}`) });
+                }
+                return response.json().catch(() => {
+                    throw new Error('Failed to parse JSON response');
+                });
+            })
+            .then(data => {
+                console.log('Order successfully submitted:', data);
+                localStorage.removeItem('cart');
+                loadCartItems();
+                alert('Your order has been submitted successfully!');
+            })
+            .catch(error => {
+                console.error('Error submitting order:', error);
+                alert(`Failed to submit your order: ${error.message}`);
+            });
         }
-        return response.json().catch(() => {
-            throw new Error('Failed to parse JSON response');
-        });
-    })
-    .then(data => {
-        console.log('Order successfully submitted:', data);
-        localStorage.removeItem('cart');
-        loadCartItems();
-        alert('Your order has been submitted successfully!');
-    })
-    .catch(error => {
-        console.error('Error submitting order:', error);
-        alert(`Failed to submit your order: ${error.message}`);
-    });
-}
 
         function checkAuthStatus() {
             const authLink = document.getElementById('auth-link');
