@@ -10,7 +10,8 @@ import secrets
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(24)
 
-client = MongoClient("mongodb+srv://robert:m8DQGRrye175THlg@cluster0.joirnmx.mongodb.net/")
+client = MongoClient("mongodb://robert:m8DQGRrye175THlg@cluster0.joirnmx.mongodb.net/game_shop_db")
+
 CORS(app)
 
 db = client.GameShop
