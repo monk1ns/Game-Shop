@@ -18,3 +18,4 @@ services:
     environment:
       - MONGO_INITDB_ROOT_USERNAME=robert
       - MONGO_INITDB_ROOT_PASSWORD=m8DQGRrye175THlg
+  
