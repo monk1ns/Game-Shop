@@ -7,7 +7,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - FLASK_APP=app.py
+      - FLASK_APP=main.py
       - FLASK_ENV=development
       - MONGO_URI=mongodb+srv://robert:m8DQGRrye175THlg@cluster0.joirnmx.mongodb.net/
 
